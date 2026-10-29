@@ -1,0 +1,25 @@
+# Hourly forecast archiving for the accuracy engine (docs/ACCURACY.md).
+# Requires repository secrets CEU_BASE_URL (e.g. https://ceu.vercel.app) and CRON_SECRET.
+# The schedule is disabled until those exist; run it manually from the Actions tab to test.
+name: Forecast snapshot
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "7 * * * *"
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call snapshot endpoint
+        env:
+          BASE_URL: ${{ secrets.CEU_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "CEU_BASE_URL / CRON_SECRET not set — skipping."
+            exit 0
+          fi
+          curl --fail-with-body -sS -H "Authorization: Bearer $CRON_SECRET" "$BASE_URL/api/cron/snapshot"
